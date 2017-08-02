@@ -1,0 +1,105 @@
+﻿@using System.Collections.Generic
+@using Chart.Mvc.ComplexChart
+@using Chart.Mvc.Extensions
+@using Dominio.Entidades
+@using System.Linq
+<script type="text/javascript" src="~/scripts/Chart.js"></script>
+<script type="text/javascript" src="~/Scripts/Graficos.js"></script>
+@model Web.Models.JugadaModels
+@{
+    ViewBag.Title = "Jugadas BCBA";
+
+    var barChart = new BarChart();
+    barChart.ComplexData.Labels.AddRange(Model.Empresas); 
+    barChart.ComplexData.Datasets.AddRange(new List<ComplexDataset>
+                           {
+                            new ComplexDataset
+                                  {
+                                      Data = Model.PrecioEntrada,
+                                      Label = "My First dataset",
+                                      FillColor = "rgba(255,0,0,0.3)",
+                                      StrokeColor = "rgba(255,0,0,1)",
+                                      PointColor = "rgba(255,0,0,1)",
+                                      PointStrokeColor = "#fff",
+                                      PointHighlightFill = "#fff",
+                                      PointHighlightStroke = "rgba(255,0,0,1)",
+                                  },
+                              new ComplexDataset
+                                  {
+                                      Data = Model.PrecioSalida,
+                                      Label = "My Second dataset",
+                                      FillColor = "rgba(0,255,0,0.3)",
+                                      StrokeColor = "rgba(0,255,0,1)",
+                                      PointColor = "rgba(151,187,205,1)",
+                                      PointStrokeColor = "#fff",
+                                      PointHighlightFill = "#fff",
+                                      PointHighlightStroke = "rgba(0,255,0,1)",
+                                  }
+                         });
+}
+
+@if (!string.IsNullOrEmpty((string)ViewBag.Mensaje))
+{
+    <div class="alert alert-info" role="alert" id="success-alert">
+        <button type="button" class="close" data-dismiss="alert">x</button>
+        @((string) ViewBag.Mensaje)
+    </div>
+}
+
+<div class="jumbotron row" style="font-size:14px">
+    <div class="col-md-12">
+        <canvas id="myCanvas" style="height: 400px !important; width: 100%"></canvas>
+        @Html.CreateChart("myCanvas", barChart)
+    </div>
+    <div class="col-md-12">
+        <table class="table table-condensed">
+            <thead>
+                <tr>
+                    <th>Empresa</th>
+                    <th>Cantidad</th>
+                    <th>Fecha</th>
+                    <th>Compra</th>
+                    <th>Venta</th>
+                    <th>Inversion</th>
+                    <th>Ganancia</th>
+                    <th><i id="recargarPrecios" class="glyphicon glyphicon-refresh" style="cursor: pointer"></i></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>Total</td>
+                    <td>@(Model.Jugadas.Where(x => x.Cerrada()).SelectMany(x => x.Movimiento).Sum(x => x.PrecioNeto))</td>
+                </tr>
+                <tr>
+                    <td>@Html.TextBox("txEmpresa", "PSUR", new { @class = "textEmpresa", @style = "width: 50px" })</td>
+                    <td>@Html.TextBox("txCantidad", null, new { @class = "textCantidad campoNumerico", @style = "width: 50px" })</td>
+                    <td></td>
+                    <td>@Html.TextBox("txPrecioEntrada", null, new { @class = "textEntrada campoNumerico", @style = "width: 50px" })</td>
+                    <td>@Html.TextBox("txPrecioSalida", null, new { @class = "textSalida campoNumerico", @style = "width: 50px" })</td>
+                    <td>@Html.TextBox("txInversion", 4000, new { @class = "textInversion campoNumerico", @style = "width: 60px" })</td>
+                    <td class="textGanancia"></td>
+                    <td class="textPorcentaje"></td>
+                </tr>
+                @foreach (var j in Model.Jugadas.OrderByDescending(x => x.Id))
+            {
+                var salida = j.PrecioSalida();
+                    <tr>
+                        <td class="textEmpresa">@j.Empresa</td>
+                        <td class="textCantidad">@j.Cantidad()</td>
+                        <td>@(j.FechaEntrada() + " - " + j.FechaSalida() + "(" + j.Dias() + ")")</td>
+                        <td class="textEntrada">@j.PrecioEntrada()</td>
+                        <td>@(salida == "-" ? Html.TextBox("a", null, new { @class = "textSalida campoNumerico", @style = "width: 50px" }) : new MvcHtmlString(salida) )</td>
+                        <td class="textInversion">@j.Inversion()</td>
+                        <td class="textGanancia">@j.Ganancia()</td>
+                        <td class="textPorcentaje">@j.Porcentaje()%</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
